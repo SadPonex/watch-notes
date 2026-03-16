@@ -7,7 +7,10 @@ import {
   onSnapshot,
   query,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc,
+  doc,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration
@@ -30,7 +33,9 @@ const db = getFirestore(app);
 const postBtn = document.getElementById('postBtn');
 const textInput = document.getElementById('textInput');
 const status = document.getElementById('status');
+const clearBtn = document.getElementById('clearBtn');
 
+// Публикация поста
 if (postBtn && textInput) {
   postBtn.addEventListener('click', async () => {
     const text = textInput.value.trim();
@@ -62,11 +67,72 @@ if (postBtn && textInput) {
   });
 }
 
+// Очистка всех постов
+if (clearBtn) {
+  clearBtn.addEventListener('click', async () => {
+    const confirmClear = confirm('⚠️ Ты уверен, что хочешь удалить ВСЕ посты? Это действие нельзя отменить!');
+    
+    if (!confirmClear) return;
+    
+    try {
+      status.textContent = '⏳ Удаление...';
+      
+      const snapshot = await getDocs(collection(db, 'posts'));
+      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      
+      status.textContent = '✅ Все посты удалены!';
+      
+      setTimeout(() => {
+        status.textContent = '';
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error:', error);
+      status.textContent = '❌ Ошибка при удалении: ' + error.message;
+    }
+  });
+}
+
 // ============================================
 // ЧАСЫ (index.html) - чтение постов
 // ============================================
 const postsContainer = document.getElementById('posts');
+const fullScreenModal = document.getElementById('fullScreenModal');
+const fullScreenText = document.getElementById('fullScreenText');
+const fullScreenTime = document.getElementById('fullScreenTime');
+const closeBtn = document.getElementById('closeBtn');
 
+// Закрытие модального окна
+function closeModal() {
+  if (fullScreenModal) {
+    fullScreenModal.style.display = 'none';
+  }
+}
+
+if (closeBtn) {
+  closeBtn.addEventListener('click', closeModal);
+}
+
+// Закрытие по клику вне контента
+if (fullScreenModal) {
+  fullScreenModal.addEventListener('click', (e) => {
+    if (e.target === fullScreenModal) {
+      closeModal();
+    }
+  });
+}
+
+// Закрытие по кнопке назад (для часов)
+if (fullScreenModal) {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Backspace') {
+      closeModal();
+    }
+  });
+}
+
+// Отображение постов
 if (postsContainer) {
   const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
   
@@ -74,7 +140,7 @@ if (postsContainer) {
     postsContainer.innerHTML = '';
     
     if (snapshot.empty) {
-      postsContainer.innerHTML = '<div style="color: #666;">Пока нет постов</div>';
+      postsContainer.innerHTML = '<div style="color: #666; text-align: center; padding: 20px;">Пока нет постов</div>';
       return;
     }
     
@@ -82,6 +148,7 @@ if (postsContainer) {
       const data = doc.data();
       const postDiv = document.createElement('div');
       postDiv.className = 'post';
+      postDiv.style.cursor = 'pointer';
       
       // Форматируем время
       let timeStr = '';
@@ -93,10 +160,22 @@ if (postsContainer) {
         });
       }
       
+      // Показываем превью (первые 100 символов)
+      const previewText = data.text.length > 100 ? data.text.substring(0, 100) + '...' : data.text;
+      
       postDiv.innerHTML = `
         <div class="time">${timeStr}</div>
-        <div>${data.text}</div>
+        <div class="post-preview">${previewText}</div>
       `;
+      
+      // Открытие полного текста при клике
+      postDiv.addEventListener('click', () => {
+        if (fullScreenModal && fullScreenText) {
+          fullScreenTime.textContent = timeStr;
+          fullScreenText.textContent = data.text;
+          fullScreenModal.style.display = 'flex';
+        }
+      });
       
       postsContainer.appendChild(postDiv);
     });
