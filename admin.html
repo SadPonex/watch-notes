@@ -5,45 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Админка</title>
   <style>
-    body {
-      font-family: -apple-system, sans-serif;
-      padding: 20px;
-      max-width: 500px;
-      margin: 0 auto;
+    * {
+      box-sizing: border-box;
     }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #f5f5f5;
+    }
+    
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
     textarea {
       width: 100%;
-      height: 120px;
-      padding: 10px;
+      height: 150px;
+      padding: 12px;
       font-size: 16px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      border: 2px solid #ddd;
       border-radius: 8px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.5;
     }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #007AFF;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
     button {
-      background: #007AFF;
-      color: white;
-      border: none;
-      padding: 12px 24px;
+      flex: 1;
+      min-width: 120px;
+      padding: 14px 20px;
       font-size: 16px;
+      border: none;
       border-radius: 8px;
       cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
     }
-    button:active {
+    
+    #postBtn {
+      background: #007AFF;
+      color: white;
+    }
+    
+    #postBtn:active {
       background: #0056b3;
+      transform: scale(0.98);
     }
+    
+    #clearBtn {
+      background: #ff3b30;
+      color: white;
+    }
+    
+    #clearBtn:active {
+      background: #d63028;
+      transform: scale(0.98);
+    }
+    
     #status {
-      margin-top: 10px;
-      color: #666;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .hint {
+      background: #e3f2fd;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #1976d2;
+      font-size: 14px;
+    }
+    
+    .hint strong {
+      display: block;
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
-  <h2>➕ Новый пост</h2>
-  <textarea id="textInput" placeholder="Введи текст..."></textarea>
-  <br>
-  <button id="postBtn">Опубликовать</button>
-  <div id="status"></div>
+  <div class="hint">
+    <strong>💡 Подсказка:</strong>
+    Переносы строк сохраняются! Просто нажми Enter в тексте.
+  </div>
+  
+  <div class="card">
+    <h2>➕ Новый пост</h2>
+    <textarea id="textInput" placeholder="Введи текст...&#10;&#10;Можно делать&#10;&#10;переносы строк!"></textarea>
+    <div class="button-group">
+      <button id="postBtn">📤 Опубликовать</button>
+      <button id="clearBtn">🗑️ Очистить всё</button>
+    </div>
+    <div id="status"></div>
+  </div>
 
   <script type="module" src="script.js"></script>
 </body>
