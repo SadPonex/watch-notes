@@ -31,13 +31,15 @@ const db = getFirestore(app);
 // АДМИНКА (admin.html) - отправка постов
 // ============================================
 const postBtn = document.getElementById('postBtn');
+const titleInput = document.getElementById('titleInput');
 const textInput = document.getElementById('textInput');
 const status = document.getElementById('status');
 const clearBtn = document.getElementById('clearBtn');
 
 // Публикация поста
-if (postBtn && textInput) {
+if (postBtn) {
   postBtn.addEventListener('click', async () => {
+    const title = titleInput ? titleInput.value.trim() : '';
     const text = textInput.value.trim();
     
     if (!text) {
@@ -49,10 +51,13 @@ if (postBtn && textInput) {
       status.textContent = '⏳ Публикация...';
       
       await addDoc(collection(db, 'posts'), {
+        title: title,
         text: text,
         timestamp: serverTimestamp()
       });
       
+      // Очистка полей
+      if (titleInput) titleInput.value = '';
       textInput.value = '';
       status.textContent = '✅ Опубликовано!';
       
@@ -99,6 +104,7 @@ if (clearBtn) {
 // ============================================
 const postsContainer = document.getElementById('posts');
 const fullScreenModal = document.getElementById('fullScreenModal');
+const fullScreenTitle = document.getElementById('fullScreenTitle');
 const fullScreenText = document.getElementById('fullScreenText');
 const fullScreenTime = document.getElementById('fullScreenTime');
 const closeBtn = document.getElementById('closeBtn');
@@ -160,19 +166,20 @@ if (postsContainer) {
         });
       }
       
-      // Показываем превью (первые 100 символов)
-      const previewText = data.text.length > 100 ? data.text.substring(0, 100) + '...' : data.text;
+      // Показываем заголовок или превью текста
+      const displayTitle = data.title || 'Без заголовка';
       
       postDiv.innerHTML = `
         <div class="time">${timeStr}</div>
-        <div class="post-preview">${previewText}</div>
+        <div class="post-title">${displayTitle}</div>
       `;
       
       // Открытие полного текста при клике
       postDiv.addEventListener('click', () => {
-        if (fullScreenModal && fullScreenText) {
+        if (fullScreenModal) {
           fullScreenTime.textContent = timeStr;
-          fullScreenText.textContent = data.text;
+          fullScreenTitle.textContent = displayTitle;
+          fullScreenText.textContent = data.text || '';
           fullScreenModal.style.display = 'flex';
         }
       });
