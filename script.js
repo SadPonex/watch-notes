@@ -12,6 +12,12 @@ import {
   doc,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -26,19 +32,98 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 // ============================================
-// АДМИНКА (admin.html) - отправка постов
+// АДМИНКА (admin.html) - Авторизация и посты
 // ============================================
+
+// Элементы авторизации
+const loginForm = document.getElementById('loginForm');
+const loginSection = document.getElementById('loginSection');
+const adminSection = document.getElementById('adminSection');
+const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const loginError = document.getElementById('loginError');
+
+// Элементы постов
 const postBtn = document.getElementById('postBtn');
 const titleInput = document.getElementById('titleInput');
 const textInput = document.getElementById('textInput');
 const status = document.getElementById('status');
 const clearBtn = document.getElementById('clearBtn');
 
-// Публикация поста
+// Проверка состояния авторизации
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Пользователь авторизован
+    if (loginSection) loginSection.style.display = 'none';
+    if (adminSection) adminSection.style.display = 'block';
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  } else {
+    // Пользователь не авторизован
+    if (loginSection) loginSection.style.display = 'block';
+    if (adminSection) adminSection.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+});
+
+// Вход
+if (loginBtn && loginForm) {
+  loginBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    
+    if (!email || !password) {
+      loginError.textContent = '⚠️ Введи email и пароль';
+      return;
+    }
+    
+    try {
+      loginBtn.textContent = '⏳ Вход...';
+      loginBtn.disabled = true;
+      
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      loginError.textContent = '';
+      emailInput.value = '';
+      passwordInput.value = '';
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      loginError.textContent = '❌ ' + getErrorMessage(error.code);
+    } finally {
+      loginBtn.textContent = '🔐 Войти';
+      loginBtn.disabled = false;
+    }
+  });
+}
+
+// Выход
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      status.textContent = '';
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  });
+}
+
+// Публикация поста (только если авторизован)
 if (postBtn) {
   postBtn.addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      status.textContent = '⚠️ Сначала войди в аккаунт!';
+      return;
+    }
+    
     const title = titleInput ? titleInput.value.trim() : '';
     const text = textInput.value.trim();
     
@@ -53,7 +138,8 @@ if (postBtn) {
       await addDoc(collection(db, 'posts'), {
         title: title,
         text: text,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
+        author: user.email
       });
       
       // Очистка полей
@@ -75,6 +161,12 @@ if (postBtn) {
 // Очистка всех постов
 if (clearBtn) {
   clearBtn.addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      status.textContent = '⚠️ Сначала войди в аккаунт!';
+      return;
+    }
+    
     const confirmClear = confirm('⚠️ Ты уверен, что хочешь удалить ВСЕ посты? Это действие нельзя отменить!');
     
     if (!confirmClear) return;
@@ -187,4 +279,18 @@ if (postsContainer) {
       postsContainer.appendChild(postDiv);
     });
   });
+}
+
+// ============================================
+// Вспомогательные функции
+// ============================================
+function getErrorMessage(code) {
+  const errors = {
+    'auth/invalid-email': 'Неверный формат email',
+    'auth/user-disabled': 'Аккаунт заблокирован',
+    'auth/user-not-found': 'Пользователь не найден',
+    'auth/wrong-password': 'Неверный пароль',
+    'auth/invalid-credential': 'Неверный email или пароль'
+  };
+  return errors[code] || 'Ошибка входа';
 }
