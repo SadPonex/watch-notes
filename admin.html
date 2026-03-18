@@ -30,6 +30,18 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .user-info {
+      font-size: 14px;
+      color: #666;
+    }
+    
     label {
       display: block;
       margin-bottom: 8px;
@@ -39,6 +51,8 @@
     }
     
     input[type="text"],
+    input[type="email"],
+    input[type="password"],
     textarea {
       width: 100%;
       padding: 12px;
@@ -49,7 +63,9 @@
       font-family: inherit;
     }
     
-    input[type="text"] {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
       height: 44px;
     }
     
@@ -60,6 +76,8 @@
     }
     
     input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
     textarea:focus {
       outline: none;
       border-color: #007AFF;
@@ -83,38 +101,81 @@
       transition: all 0.2s;
     }
     
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    #loginBtn,
     #postBtn {
       background: #007AFF;
       color: white;
     }
     
-    #postBtn:active {
+    #loginBtn:active:not(:disabled),
+    #postBtn:active:not(:disabled) {
       background: #0056b3;
       transform: scale(0.98);
     }
     
+    #logoutBtn,
     #clearBtn {
       background: #ff3b30;
       color: white;
     }
     
-    #clearBtn:active {
+    #logoutBtn:active:not(:disabled),
+    #clearBtn:active:not(:disabled) {
       background: #d63028;
       transform: scale(0.98);
     }
     
-    #status {
+    #status,
+    #loginError {
       margin-top: 15px;
       padding: 12px;
       border-radius: 8px;
       font-weight: 500;
       text-align: center;
     }
+    
+    #loginError {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .logout-btn {
+      min-width: auto;
+      flex: none;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>➕ Новый пост</h2>
+  <!-- Форма входа -->
+  <div id="loginSection" class="card">
+    <h2>🔐 Вход в админку</h2>
+    <form id="loginForm">
+      <label for="emailInput">Email</label>
+      <input type="email" id="emailInput" placeholder="tvoj@email.com">
+      
+      <label for="passwordInput">Пароль</label>
+      <input type="password" id="passwordInput" placeholder="Введи пароль">
+      
+      <button type="submit" id="loginBtn">🔐 Войти</button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+  
+  <!-- Админ-панель (скрыта пока не войдёшь) -->
+  <div id="adminSection" class="card hidden">
+    <div class="header">
+      <h2>➕ Новый пост</h2>
+      <button id="logoutBtn" class="logout-btn">🚪 Выйти</button>
+    </div>
     
     <label for="titleInput">Заголовок (необязательно)</label>
     <input type="text" id="titleInput" placeholder="Введи заголовок...">
